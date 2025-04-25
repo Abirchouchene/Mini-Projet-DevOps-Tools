@@ -1,0 +1,10 @@
+replicaCount: 2
+
+image:
+  repository: meeting-room-reservation
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 5000
