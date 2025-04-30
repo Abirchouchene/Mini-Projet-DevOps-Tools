@@ -1,19 +1,23 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_cors import CORS
 
 db = SQLAlchemy()
-migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:Nothing123@db:5432/reservation_db"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    CORS(app)
+
+    from config import Config
+    app.config.from_object(Config)
 
     db.init_app(app)
-    migrate.init_app(app, db)
 
-    from .routes import bp as routes_bp
-    app.register_blueprint(routes_bp)
+    with app.app_context():
+        from . import models
+        db.create_all()
+
+        from .routes import user_bp
+        app.register_blueprint(user_bp)
 
     return app

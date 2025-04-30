@@ -1,12 +1,15 @@
+{{- range $service, $port := .Values.servicePorts }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-gateway-service
+  name: {{- printf "%s" $service | lower | replace " " "-" }}
 spec:
   selector:
-    app: {{ .Release.Name }}-gateway
+    app: {{- printf "%s" $service | lower | replace " " "-" }}
   ports:
-    - protocol: TCP
-      port: {{ .Values.service.port }}
-      targetPort: 5000
-  type: {{ .Values.service.type }}
+  - protocol: TCP
+    port: {{ $port }}
+    targetPort: {{ $port }}
+  type: ClusterIP
+{{- end }}

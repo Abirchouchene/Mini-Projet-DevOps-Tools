@@ -1,6 +1,8 @@
-from . import create_app  # ← note le point
+from app import create_app
+from app.kafka_consumer import start_kafka_consumer
 
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)
+    start_kafka_consumer()
+    app.run(host="0.0.0.0", port=5000)
