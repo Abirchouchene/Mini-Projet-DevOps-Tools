@@ -1,18 +1,36 @@
-from flask import Blueprint, request, jsonify
-from app import db
-from app.models import User
+from flask import request, jsonify, current_app
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+import datetime
 
-user_bp = Blueprint('user_bp', __name__)
+def init_routes(app):
+    from app import db
+    from app.models import User
 
-@user_bp.route("/users", methods=["POST"])
-def create_user():
-    data = request.json
-    new_user = User(email=data["email"], name=data["name"])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "User created"}), 201
+    @app.route('/health')
+    def health():
+        return {"status": "healthy"}
 
-@user_bp.route("/users", methods=["GET"])
-def get_users():
-    users = User.query.all()
-    return jsonify([{"id": u.id, "name": u.name, "email": u.email} for u in users])
+    @app.route('/users/register', methods=['POST'])
+    def register():
+        data = request.get_json()
+        hashed_password = generate_password_hash(data['password'])
+        new_user = User(username=data['username'], email=data['email'], password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "User created"}), 201
+
+    @app.route('/users/login', methods=['POST'])
+    def login():
+        data = request.get_json()
+        user = User.query.filter_by(email=data['email']).first()
+
+        if user and check_password_hash(user.password, data['password']):
+            token = jwt.encode({
+                'user_id': user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+            }, current_app.config['SECRET_KEY'], algorithm='HS256')
+
+            return jsonify({'token': token})
+
+        return jsonify({"message": "Invalid credentials"}), 401

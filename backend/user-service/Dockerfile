@@ -1,10 +1,15 @@
+# Utiliser une image de base Python
 FROM python:3.9-slim
 
+# Définir le répertoire de travail
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+# Copier les fichiers requirements.txt et installer les dépendances
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copier le reste des fichiers
 COPY . .
 
-CMD ["python", "app/main.py"]
+# Commande pour démarrer l'application
+CMD ["python", "-m", "app.main"]

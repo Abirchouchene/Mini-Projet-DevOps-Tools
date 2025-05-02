@@ -1,26 +1,28 @@
 import unittest
-from app import create_app, db
-import json
+from app.main import app
 
-class TestRoutes(unittest.TestCase):
+class UserServiceTest(unittest.TestCase):
+
     def setUp(self):
-        self.app = create_app()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Nothing123@db:5432/user_db'
-        self.client = self.app.test_client()
+        self.app = app.test_client()
+        self.app.testing = True
 
-        with self.app.app_context():
-            db.create_all()
-
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-
-    def test_get_users(self):
-        response = self.client.get('/api/users/')
+    def test_health_check(self):
+        response = self.app.get('/health')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data), [])
+        self.assertEqual(response.json['status'], 'healthy')
+
+    def test_register_login(self):
+        user_data = {
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'testpass'
+        }
+        res = self.app.post('/users/register', json=user_data)
+        self.assertEqual(res.status_code, 201)
+        res = self.app.post('/users/login', json=user_data)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('token', res.get_json())
 
 if __name__ == '__main__':
     unittest.main()
